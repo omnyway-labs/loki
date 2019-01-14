@@ -1,0 +1,36 @@
+* About
+
+Clojure Library to query AWS Athena
+
+The library provides just one function `qeury` that takes
+- A query Map defined using [[https://github.com/omnyway-labs/sqly]] EDN form
+- A *Values* map that overlays the Template variables
+
+* Usage
+
+#+begin_src clojure
+
+(init! "s3://my-results-bucket"
+       {:auth-type :profile
+        :profile   (System/getenv "AWS_PROFILE")
+        :region    "us-east-1"})
+
+(require '[loki.core :as loki])
+
+(loki/query sqly-query-map values overrides)
+
+;; example
+(loki/query database-name
+            {:select   {:timestamp :datetime :id :session-id},
+             :from     :orders
+             :order-by [[:timestamp :desc]]
+             :where    {:id "{{order-id}}"}}
+            {:order-id "xyz123"}
+            {:limit 3})
+#+end_src
+
+
+* AUTHORS
+
+icylisper https://github.com/icylisper
+samrat https://github.com/samrat
