@@ -37,7 +37,6 @@
     (.withOutputLocation (get-bucket))))
 
 (defn start-query [db query-str]
-  (println @client)
   (->> (doto (StartQueryExecutionRequest.)
          (.withQueryString query-str)
          (.withQueryExecutionContext (make-exec-context db))

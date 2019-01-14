@@ -1,13 +1,13 @@
 {:deps
- {clj-time {:mvn/version "0.14.4"},
-  stencil {:mvn/version "0.5.0"},
-  clojurewerkz/propertied {:mvn/version "1.2.0"},
-  com.amazonaws/aws-java-sdk-sts #:mvn{:version "1.11.428"},
-  com.amazonaws/aws-java-sdk-athena #:mvn{:version "1.11.428"},
+ {clj-time                          {:mvn/version "0.14.4"},
+  stencil                           {:mvn/version "0.5.0"},
+  clojurewerkz/propertied           {:mvn/version "1.2.0"},
+  com.amazonaws/aws-java-sdk-sts    {:mvn/version "1.11.428"},
+  com.amazonaws/aws-java-sdk-athena {:mvn/version "1.11.428"},
+  com.google.guava/guava            {:mvn/version "22.0"},
+  org.clojure/clojure               {:mvn/version "1.9.0"},
+  org.clojure/core.match            {:mvn/version "0.3.0-alpha5"}
   omnyway-labs/sqly
   {:git/url "git@github.com:omnyway-labs/sqly.git",
-   :sha "47c3112a7073e2ecdfee8da56711cbcc6fe657a2",
-   :tag "0.1.15"},
-  com.google.guava/guava {:mvn/version "22.0"},
-  org.clojure/clojure {:mvn/version "1.9.0"},
-  org.clojure/core.match {:mvn/version "0.3.0-alpha5"}}}
+   :sha     "47c3112a7073e2ecdfee8da56711cbcc6fe657a2",
+   :tag     "0.1.15"}}}
