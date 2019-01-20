@@ -1,6 +1,6 @@
 (ns loki.athena
   (:require
-   [loki.cred :as cred]
+   [saw.core :as saw]
    [loki.util :as u])
   (:import
    [com.amazonaws.services.athena
@@ -24,7 +24,7 @@
 
 (defn- make-client [region]
   (-> (AmazonAthenaClientBuilder/standard)
-      (.withCredentials (cred/cred-provider))
+      (.withCredentials (saw/creds))
       (.withRegion region)
       .build))
 
@@ -113,6 +113,6 @@
 
 (defn init! [bucket {:keys [region] :as auth}]
   (let [region (or region "us-east-1")]
-    (cred/init! auth)
+    (saw/login auth)
     (reset! result-bucket bucket)
     (reset! client (make-client region))))
