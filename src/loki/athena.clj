@@ -37,12 +37,15 @@
     (.withOutputLocation (get-bucket))))
 
 (defn start-query [db query-str]
-  (->> (doto (StartQueryExecutionRequest.)
-         (.withQueryString query-str)
-         (.withQueryExecutionContext (make-exec-context db))
-         (.withResultConfiguration (make-result-config)))
-       (.startQueryExecution @client)
-       (.getQueryExecutionId)))
+  (let [request (-> (StartQueryExecutionRequest.)
+                  (.withQueryString query-str)
+                  (.withResultConfiguration (make-result-config)))
+        request (if db
+                  (.withQueryExecutionContext request (make-exec-context db))
+                  request)]
+    (->> request
+      (.startQueryExecution @client)
+      (.getQueryExecutionId))))
 
 (defn as-state [ob]
   (.. ob getQueryExecution getStatus getState))
@@ -107,9 +110,12 @@
                 6000)
   (get-resultseq query-id))
 
-(defn exec [db query-str]
-  (let [query-id (start-query db query-str)]
-    (get-results query-id)))
+(defn exec
+  ([query-str]
+   (exec nil query-str))
+  ([db query-str]
+   (let [query-id (start-query db query-str)]
+     (get-results query-id))))
 
 (defn init! [bucket {:keys [region] :as auth}]
   (let [region (or region "us-east-1")]

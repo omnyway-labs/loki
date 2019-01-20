@@ -15,8 +15,8 @@
   (->> (athena/exec db (str "show tables in " db))
        (map #(str db "." (:tab_name %)))))
 
-(defn describe [tb]
-  (let [stmt (athena/exec (str "show create table " (name tb)))]
+(defn describe [db tb]
+  (let [stmt (athena/exec db (str "show create table " (name tb)))]
     (apply str (interpose "\n" (map :createtab_stmt stmt)))))
 
 (defn assert!
@@ -44,10 +44,15 @@
   (-> (render query values)
       (sql/sql)))
 
-(defn exec [db query-str]
-  (athena/exec db (format "%s" query-str)))
+(defn exec
+  ([query-str]
+   (athena/exec query-str))
+  ([db query-str]
+   (athena/exec db (format "%s" query-str))))
 
 (defn query
+  ([query-map]
+   (query nil query-map {} {}))
   ([db query-map]
    (query db query-map {} {}))
   ([db query-map values]
