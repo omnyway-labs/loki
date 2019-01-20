@@ -8,6 +8,14 @@ The library provides just one function `qeury` that takes
 
 * Usage
 
+Add below git coordinates in deps.edn
+
+#+BEGIN_SRC clojure
+omnyway-labs/loki
+{:git/url "https://github.com/omnyway-labs/loki.git",
+ :sha "2806b3686855ff762dfc21feece39054a952d074"}
+#+END_SRC
+
 #+begin_src clojure
 
 (init! "s3://my-results-bucket"
