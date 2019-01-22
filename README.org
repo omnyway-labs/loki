@@ -2,7 +2,7 @@
 
 Clojure Library to query AWS Athena
 
-The library provides just one function `qeury` that takes
+The library provides just one function `query` that takes
 - A query Map defined using [[https://github.com/omnyway-labs/sqly]] EDN form
 - A *Values* map that overlays the Template variables
 
@@ -53,7 +53,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-* AUTHORS
 
-- samrat https://github.com/samrat
-- icylisper https://github.com/icylisper
+* Thanks
+
+Samrat - https://github.com/samrat for initial work and render fn
