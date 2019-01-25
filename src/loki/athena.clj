@@ -13,7 +13,8 @@
     ResultConfiguration
     Row
     StartQueryExecutionRequest
-    StartQueryExecutionResult]))
+    StartQueryExecutionResult
+    InvalidRequestException]))
 
 (defonce client (atom nil))
 
@@ -111,7 +112,11 @@
   (u/wait-until #(succeeded? query-id)
                 query-id
                 timeout)
-  (get-resultseq query-id))
+  (try
+    (get-resultseq query-id)
+    (catch InvalidRequestException e
+      {:error-id :invalid-request
+       :msg (.getMessage e)})))
 
 (defn exec
   ([query-str]
