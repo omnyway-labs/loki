@@ -104,10 +104,13 @@
              (->> (process-rows rows cols)
                   (conj acc))))))
 
+;; 10min max
+(def timeout 600000)
+
 (defn get-results [query-id]
   (u/wait-until #(succeeded? query-id)
                 query-id
-                6000)
+                timeout)
   (get-resultseq query-id))
 
 (defn exec
