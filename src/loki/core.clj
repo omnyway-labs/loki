@@ -58,7 +58,6 @@
   ([query-str]
    (athena/exec query-str))
   ([db query-str]
-   (prn query-str)
    (athena/exec (name db) (format "%s" query-str))))
 
 (defn query
