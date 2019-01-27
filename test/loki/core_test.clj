@@ -6,7 +6,7 @@
    [loki.athena :as athena]))
 
 (defn setup []
-  (loki/init! (System/getenv "QUERY_BUCKET")
+  (loki/init! (System/getenv "LOKI_QUERY_BUCKET")
               (saw/session)))
 
 (deftest render-test
@@ -18,15 +18,21 @@
                        :where  '(= :a "{{a}}")}
                       {:a "bar"}))))
 
-(deftest ^:integration basic-test
+(deftest ^:integration schema-test
   (setup)
-  (is (= 3
-         (-> (loki/query :my-db
-                         {:select   {:timestamp :datetime
-                                     :id :session-id}
-                          :from     :orders
-                          :order-by [[:timestamp :desc]]
-                          :where    {:id "{{order-id}}"}}
-                         {:order-id "xyz123"}
-                         {:limit 3})
-             (count)))))
+  (is (= {:lat  "double"
+          :lon  "double"
+          :name "string"
+          :pop  "bigint"
+          :year "string"}
+         (loki/schema :labs :us_cities)))
+
+  (is (= 1
+         (count
+          (loki/query :labs
+                      {:select {:lat :lat
+                                :lon :lon
+                                :name :name}
+                       :from   :labs.us-cities
+                      :where  '(= :name "{{name}}")}
+                      {:name "New York"})))))

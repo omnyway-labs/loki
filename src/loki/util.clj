@@ -59,3 +59,11 @@
 
 (defn omethods [obj]
   (map #(.getName %) (-> obj class .getMethods)))
+
+(defn assert!
+  "Check that all values to be replaced in the query are present in the
+  `data` map."
+  [template values]
+  (doseq [[_ key] (re-seq #"\{\{(\w+-?\w+)\}\}" template)]
+    (assert (get values (keyword key))
+            (format "Don't know value for {{%s}}" key))))

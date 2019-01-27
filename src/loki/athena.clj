@@ -37,16 +37,26 @@
   (doto (ResultConfiguration.)
     (.withOutputLocation (get-bucket))))
 
-(defn start-query [db query-str]
-  (let [request (-> (StartQueryExecutionRequest.)
-                  (.withQueryString query-str)
-                  (.withResultConfiguration (make-result-config)))
-        request (if db
-                  (.withQueryExecutionContext request (make-exec-context db))
-                  request)]
-    (->> request
-      (.startQueryExecution @client)
-      (.getQueryExecutionId))))
+(defn- make-request
+  ([query-str]
+   (doto (StartQueryExecutionRequest.)
+     (.withQueryString query-str)
+     (.withResultConfiguration (make-result-config))))
+  ([db query-str]
+   (doto (StartQueryExecutionRequest.)
+     (.withQueryString query-str)
+     (.withResultConfiguration (make-result-config))
+     (.withQueryExecutionContext (make-exec-context db)))))
+
+(defn start-query
+  ([query-str]
+   (->> (make-request query-str)
+        (.startQueryExecution @client)
+        (.getQueryExecutionId)))
+  ([db query-str]
+   (->> (make-request db query-str)
+        (.startQueryExecution @client)
+        (.getQueryExecutionId))))
 
 (defn as-state [ob]
   (.. ob getQueryExecution getStatus getState))
@@ -63,13 +73,14 @@
       (throw (Exception. (format "Query Failed: %s" query-id))))
     (=  state "SUCCEEDED")))
 
-(defn as-resultset [x]
-  {:token     (.getNextToken x)
-   :resultset (.getResultSet x)
-   :cols      (->> (.. x getResultSet getResultSetMetadata
+(defn as-resultset [rs]
+  {:token     (.getNextToken rs)
+   :resultset (.getResultSet rs)
+   :cols      (->> (.. rs getResultSet
+                       getResultSetMetadata
                        getColumnInfo)
                    (map #(.getName %)))
-   :rows      (.. x getResultSet getRows)})
+   :rows      (.. rs getResultSet getRows)})
 
 (defn get-resultset
   ([query-id]
@@ -108,19 +119,23 @@
 ;; 10min max
 (def timeout 600000)
 
-(defn get-results [query-id]
+(defn wait! [query-id]
   (u/wait-until #(succeeded? query-id)
                 query-id
-                timeout)
+                timeout))
+
+(defn get-results [query-id]
+  (wait! query-id)
   (try
     (get-resultseq query-id)
     (catch InvalidRequestException e
       {:error-id :invalid-request
-       :msg (.getMessage e)})))
+       :msg      (.getMessage e)})))
 
 (defn exec
   ([query-str]
-   (exec nil query-str))
+   (let [query-id (start-query query-str)]
+     (get-results query-id)))
   ([db query-str]
    (let [query-id (start-query db query-str)]
      (get-results query-id))))

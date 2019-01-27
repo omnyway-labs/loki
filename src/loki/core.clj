@@ -1,38 +1,48 @@
 (ns loki.core
   (:require
-   [clojure.walk :refer [postwalk]]
+   [clojure.walk
+    :refer [postwalk]
+    :as walk]
    [clojure.string :as str]
    [stencil.core :as stencil]
    [sqly.core :as sql]
+   [saw.core :as saw]
    [loki.athena :as athena]
-   [loki.util :as lu]))
+   [loki.util :as u]))
 
 (defn list-databases []
   (->> (athena/exec "show databases")
        (map :database_name)))
 
 (defn list-tables [db]
-  (->> (athena/exec db (str "show tables in " db))
-       (map #(str db "." (:tab_name %)))))
+  (->> (athena/exec (str "show tables in " db))
+       (map #(keyword (:tab_name %)))))
 
 (defn describe [db tb]
   (let [stmt (athena/exec db (str "show create table " (name tb)))]
     (apply str (interpose "\n" (map :createtab_stmt stmt)))))
 
-(defn assert!
-  "Check that all values to be replaced in the query are present in the
-  `data` map."
-  [template values]
-  (doseq [[_ key] (re-seq #"\{\{(\w+-?\w+)\}\}" template)]
-    (assert (get values (keyword key))
-            (format "Don't know value for {{%s}}" key))))
+(defn- as-col [{:keys [createtab_stmt]}]
+  (let [m (str/triml createtab_stmt)]
+    (when (str/starts-with? m "`")
+      (-> (str/replace m #"`|\)|," "")
+          (str/split #" ")))))
+
+(defn schema [db tb]
+  (->> (str "show create table " (name tb))
+       (athena/exec (name db))
+       (map as-col)
+       (remove nil?)
+       (into (sorted-map))
+       (walk/keywordize-keys)
+       (into (sorted-map))))
 
 (defn render
   "Replace template placeholders in query with actual values."
   [query values]
   (postwalk (fn [x]
               (if (string? x)
-                (do (assert! x values)
+                (do (u/assert! x values)
                     (stencil/render-string x values))
                 x))
             query))
@@ -48,7 +58,8 @@
   ([query-str]
    (athena/exec query-str))
   ([db query-str]
-   (athena/exec db (format "%s" query-str))))
+   (prn query-str)
+   (athena/exec (name db) (format "%s" query-str))))
 
 (defn query
   ([query-map]
