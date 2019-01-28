@@ -67,3 +67,12 @@
   (doseq [[_ key] (re-seq #"\{\{(\w+-?\w+)\}\}" template)]
     (assert (get values (keyword key))
             (format "Don't know value for {{%s}}" key))))
+
+
+(defn compact [coll]
+  (cond
+    (vector? coll)
+    (into [] (filter (complement nil?) coll))
+
+    (map? coll)
+    (into {} (filter (comp not nil? second) coll))))

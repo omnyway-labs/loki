@@ -67,11 +67,12 @@
 (defn query [query-map & {:keys [db values overrides duration]
                           :or   {values    {}
                                  overrides {}}}]
-  (let [values (if duration
-                 (merge values (parse-duration duration))
-                 values)
-        q (-> (merge query-map overrides)
-              (render-query values))]
+  (let [values    (if duration
+                    (merge values (parse-duration duration))
+                    values)
+        overrides (u/compact overrides)
+        q         (-> (merge query-map overrides)
+                      (render-query values))]
     (if db
       (exec q)
       (exec db q))))
