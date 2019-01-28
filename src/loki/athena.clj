@@ -91,7 +91,7 @@
   ([query-id token]
    (->> (doto (GetQueryResultsRequest.)
           (.withQueryExecutionId query-id)
-          (.withNextToken query-id))
+          (.withNextToken token))
         (.getQueryResults @client)
         (as-resultset))))
 
