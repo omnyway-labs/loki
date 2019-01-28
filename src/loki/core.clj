@@ -60,17 +60,21 @@
   ([db query-str]
    (athena/exec (name db) (format "%s" query-str))))
 
-(defn query
-  ([query-map]
-   (query nil query-map {} {}))
-  ([db query-map]
-   (query db query-map {} {}))
-  ([db query-map values]
-   (query db query-map values {}))
-  ([db query-map values overrides]
-   (let [q (-> (merge query-map overrides)
-               (render-query values))]
-     (exec db q))))
+(defn parse-duration [duration-str]
+  (-> (u/parse-duration duration-str)
+      (u/duration->from-and-to)))
+
+(defn query [query-map & {:keys [db values overrides duration]
+                          :or   {values    {}
+                                 overrides {}}}]
+  (let [values (if duration
+                 (merge values (parse-duration duration))
+                 values)
+        q (-> (merge query-map overrides)
+              (render-query values))]
+    (if db
+      (exec q)
+      (exec db q))))
 
 (defn init! [bucket aws-auth]
   (athena/init! bucket aws-auth))

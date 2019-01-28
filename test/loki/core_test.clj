@@ -2,6 +2,7 @@
   (:require
    [clojure.test :refer :all]
    [saw.core :as saw]
+   [loki.util :as u]
    [loki.core :as loki]
    [loki.athena :as athena]))
 
@@ -18,6 +19,10 @@
                        :where  '(= :a "{{a}}")}
                       {:a "bar"}))))
 
+(deftest duration-test
+  (is (= [:from :to]
+         (keys (loki/parse-duration "1d")))))
+
 (deftest ^:integration schema-test
   (setup)
   (is (= {:lat  "double"
@@ -29,10 +34,10 @@
 
   (is (= 1
          (count
-          (loki/query :labs
-                      {:select {:lat :lat
-                                :lon :lon
+          (loki/query {:select {:lat  :lat
+                                :lon  :lon
                                 :name :name}
                        :from   :labs.us-cities
-                      :where  '(= :name "{{name}}")}
-                      {:name "New York"})))))
+                       :where   '(= :name "{{name}}")}
+                      :db :labs
+                      :values   {:name "New York"})))))
