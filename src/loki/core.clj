@@ -72,18 +72,21 @@
 (defn query
   "Runs an Athena query by transforming the query-map to Athena SQL.
   The Query runs synchronously and returns a vector of maps"
-  [query-map & {:keys [db values overrides duration]
-                          :or   {values    {}
-                                 overrides {}}}]
+  [query-map & {:keys [db values overrides duration render?]
+                :or   {values    {}
+                       overrides {}
+                       render?   false}}]
   (let [values    (if duration
                     (merge values (parse-duration duration))
                     values)
         overrides (u/compact overrides)
-        q         (-> (merge query-map overrides)
+        query-str (-> (merge query-map overrides)
                       (render-query values))]
-    (if db
-      (exec q)
-      (exec db q))))
+    (if render?
+      query-str
+      (if db
+        (exec query-str)
+        (exec db query-str)))))
 
 (defn init! [bucket aws-auth]
   (athena/init! bucket aws-auth))
