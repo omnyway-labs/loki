@@ -41,3 +41,12 @@
                        :where   '(= :name "{{name}}")}
                       :db :labs
                       :values   {:name "New York"})))))
+
+(deftest ^:integration error-test
+  (setup)
+  (is (= {:error-code "MALFORMED_QUERY",
+          :error-id   :invalid-request}
+         (-> (loki/query {:select {:lat :lat1}
+                          :from   "`labs.us-cities`" }
+                         :db :labs)
+             (select-keys [:error-code :error-id])))))

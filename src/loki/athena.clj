@@ -6,6 +6,7 @@
    [com.amazonaws.services.athena
     AmazonAthenaClientBuilder]
    [com.amazonaws.services.athena.model
+    AmazonAthenaException
     GetQueryExecutionRequest
     GetQueryResultsRequest
     QueryExecutionContext
@@ -48,24 +49,46 @@
      (.withResultConfiguration (make-result-config))
      (.withQueryExecutionContext (make-exec-context db)))))
 
-(defn start-query
+(defmacro with-query [& body]
+  `(try
+    ~@body
+    (catch InvalidRequestException e#
+      {:error-id   :invalid-request
+       :error-code (.getAthenaErrorCode e#)
+       :msg        (.getErrorMessage e#)})))
+
+(defn- start-query
   ([query-str]
-   (->> (make-request query-str)
-        (.startQueryExecution @client)
-        (.getQueryExecutionId)))
-  ([db query-str]
-   (->> (make-request db query-str)
+   (with-query
+     (->> (make-request query-str)
         (.startQueryExecution @client)
         (.getQueryExecutionId))))
+  ([db query-str]
+   (with-query
+    (->> (make-request db query-str)
+         (.startQueryExecution @client)
+         (.getQueryExecutionId)))))
 
 (defn as-state [ob]
   (.. ob getQueryExecution getStatus getState))
+
+(defn as-stat [ob]
+  (let [ex (.. ob getQueryExecution)]
+    {:status         (.. ex  getStatus getState)
+     :bytes-scanned  (.getDataScannedInBytes ex)
+     :execution-time (.getEngineExecutionTimeInMillis ex)}))
 
 (defn get-state [query-id]
   (->> (doto (GetQueryExecutionRequest.)
          (.withQueryExecutionId query-id))
        (.getQueryExecution @client)
        (as-state)))
+
+(defn get-query-stat [query-id]
+  (->> (doto (GetQueryExecutionRequest.)
+         (.withQueryExecutionId query-id))
+       (.getQueryExecution @client)
+       (as-stat)))
 
 (defn succeeded? [query-id]
   (let [state (get-state query-id)]
@@ -125,20 +148,25 @@
                 timeout))
 
 (defn get-results [query-id]
-  (wait! query-id)
   (try
+    (wait! query-id)
     (get-resultseq query-id)
-    (catch InvalidRequestException e
-      {:error-id :invalid-request
+    (catch Exception e
+      {:error-id :error
        :msg      (.getMessage e)})))
+
+(defn exec* [param]
+  (if (and (map? param) (:error-id param))
+    param
+    (get-results param)))
 
 (defn exec
   ([query-str]
-   (let [query-id (start-query query-str)]
-     (get-results query-id)))
+   (-> (start-query query-str)
+       (exec*)))
   ([db query-str]
-   (let [query-id (start-query db query-str)]
-     (get-results query-id))))
+   (-> (start-query db query-str)
+       (exec*))))
 
 (defn init! [bucket {:keys [region] :as auth}]
   (let [region (or region "us-east-1")]
