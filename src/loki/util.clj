@@ -76,3 +76,6 @@
 
     (map? coll)
     (into {} (filter (comp not nil? second) coll))))
+
+(defn bytes->kb [b]
+  (int (/ b 1024)))

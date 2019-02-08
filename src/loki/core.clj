@@ -27,6 +27,9 @@
   (let [stmt (athena/exec db (str "show create table " (name tb)))]
     (apply str (interpose "\n" (map :createtab_stmt stmt)))))
 
+(defn list-query-executions []
+  (athena/list-query-executions))
+
 (defn- as-col [{:keys [createtab_stmt]}]
   (let [m (str/triml createtab_stmt)]
     (when (str/starts-with? m "`")

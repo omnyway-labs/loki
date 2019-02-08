@@ -15,7 +15,8 @@
     Row
     StartQueryExecutionRequest
     StartQueryExecutionResult
-    InvalidRequestException]))
+    InvalidRequestException
+    ListQueryExecutionsRequest]))
 
 (defonce client (atom nil))
 
@@ -72,23 +73,33 @@
 (defn as-state [ob]
   (.. ob getQueryExecution getStatus getState))
 
-(defn as-stat [ob]
-  (let [ex (.. ob getQueryExecution)]
-    {:status         (.. ex  getStatus getState)
-     :bytes-scanned  (.getDataScannedInBytes ex)
-     :execution-time (.getEngineExecutionTimeInMillis ex)}))
+(defn as-stat [query-id ob]
+  (let [ex (.getQueryExecution ob)
+        st (.getStatistics ex)]
+    {:id         query-id
+     :status     (.. ex getStatus getState)
+     :scanned-kb (u/bytes->kb
+                  (.getDataScannedInBytes st))
+     :time-ms    (.getEngineExecutionTimeInMillis st)}))
+
+(defn get-query-stat [query-id]
+  (->> (doto (GetQueryExecutionRequest.)
+         (.withQueryExecutionId query-id))
+       (.getQueryExecution @client)
+       (as-stat query-id)))
+
+(defn list-query-executions []
+  (->> (doto (ListQueryExecutionsRequest.)
+         (.withMaxResults (int 10)))
+       (.listQueryExecutions @client)
+       (.getQueryExecutionIds)
+       (map get-query-stat)))
 
 (defn get-state [query-id]
   (->> (doto (GetQueryExecutionRequest.)
          (.withQueryExecutionId query-id))
        (.getQueryExecution @client)
        (as-state)))
-
-(defn get-query-stat [query-id]
-  (->> (doto (GetQueryExecutionRequest.)
-         (.withQueryExecutionId query-id))
-       (.getQueryExecution @client)
-       (as-stat)))
 
 (defn succeeded? [query-id]
   (let [state (get-state query-id)]
