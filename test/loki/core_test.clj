@@ -4,7 +4,8 @@
    [saw.core :as saw]
    [loki.util :as u]
    [loki.core :as loki]
-   [loki.athena :as athena]))
+   [loki.athena :as athena]
+   [loki.ddl :as ddl]))
 
 (defn setup []
   (loki/init! (System/getenv "LOKI_QUERY_BUCKET")

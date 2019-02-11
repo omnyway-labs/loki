@@ -18,11 +18,6 @@
   (->> (athena/exec (str "show tables in " db))
        (map #(keyword (:tab_name %)))))
 
-(defn list-partitions [db tb]
-  (->> (format "show partitions %s.%s" (name db) (name tb))
-       (athena/exec)
-       (map :partition)))
-
 (defn describe [db tb]
   (let [stmt (athena/exec db (str "show create table " (name tb)))]
     (apply str (interpose "\n" (map :createtab_stmt stmt)))))
