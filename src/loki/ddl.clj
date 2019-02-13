@@ -29,3 +29,22 @@
          (group-by :num)
          (vals)
          (map as-part))))
+
+(defn- make-part-query [bucket prefix db tb {:keys [year month day]}]
+  (->> [(format "ALTER TABLE %s.%s" (name db) (name tb))
+        (format "ADD IF NOT EXISTS PARTITION (year='%s',month='%s',day='%s')"
+                year month day)
+        (format "location 's3://%s/%s/%s/%s/%s/'"
+                bucket prefix
+                year month day)]
+       (interpose " ")
+       (apply str)))
+
+(defn add-partition
+  ([bucket prefix db tb]
+   (add-partition bucket prefix db tb (u/ymd)))
+  ([bucket prefix db tb ymd]
+   (when ymd
+     (let [result (exec
+                   (make-part-query bucket prefix db tb ymd))]
+       (if (empty? result) ymd result)))))

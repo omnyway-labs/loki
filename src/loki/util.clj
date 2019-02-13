@@ -9,7 +9,8 @@
   (:import
    [java.io PushbackReader]
    [com.google.common.util.concurrent
-    RateLimiter]))
+    RateLimiter]
+   [java.util Calendar TimeZone]))
 
 (defn canonicalize-duration-units
   [units]
@@ -79,3 +80,12 @@
 
 (defn bytes->kb [b]
   (int (/ b 1024)))
+
+(defn ymd []
+  (let [now (Calendar/getInstance (TimeZone/getTimeZone "UTC"))]
+    {:year  (.get now Calendar/YEAR)
+     :month (->> (.get now Calendar/MONTH)
+                 (inc)
+                 (format "%02d"))
+     :day   (->> (.get now Calendar/DATE)
+                 (format "%02d"))}))
