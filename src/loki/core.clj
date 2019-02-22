@@ -83,8 +83,8 @@
     (if render?
       query-str
       (if db
-        (exec query-str)
-        (exec db query-str)))))
+        (exec db query-str)
+        (exec query-str)))))
 
 (defn init! [bucket aws-auth]
   (athena/init! bucket aws-auth))
