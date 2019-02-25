@@ -36,6 +36,7 @@
        (athena/exec (name db))
        (map as-col)
        (remove nil?)
+       (map (fn [[k v & _]] [k v]))
        (into (sorted-map))
        (walk/keywordize-keys)
        (into (sorted-map))))
