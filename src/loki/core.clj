@@ -62,7 +62,11 @@
   ([query-str]
    (athena/exec query-str))
   ([db query-str]
-   (athena/exec (name db) (format "%s" query-str))))
+   (athena/exec (name db) (format "%s" query-str)))
+  ([db query-str request-id]
+   (if request-id
+     (athena/exec (name db) (format "%s" query-str) request-id)
+     (athena/exec (name db) (format "%s" query-str)))))
 
 (defn parse-duration [duration-str]
   (-> (u/parse-duration duration-str)
@@ -71,7 +75,8 @@
 (defn query
   "Runs an Athena query by transforming the query-map to Athena SQL.
   The Query runs synchronously and returns a vector of maps"
-  [query-map & {:keys [db values overrides duration render?]
+  [query-map & {:keys [db values overrides duration
+                       render? request-id]
                 :or   {values    {}
                        overrides {}
                        render?   false}}]
@@ -84,7 +89,7 @@
     (if render?
       query-str
       (if db
-        (exec db query-str)
+        (exec db query-str request-id)
         (exec query-str)))))
 
 (defn init! [bucket aws-auth]

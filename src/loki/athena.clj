@@ -48,6 +48,12 @@
    (doto (StartQueryExecutionRequest.)
      (.withQueryString query-str)
      (.withResultConfiguration (make-result-config))
+     (.withQueryExecutionContext (make-exec-context db))))
+  ([db query-str request-id]
+   (doto (StartQueryExecutionRequest.)
+     (.withQueryString query-str)
+     (.withClientRequestToken request-id)
+     (.withResultConfiguration (make-result-config))
      (.withQueryExecutionContext (make-exec-context db)))))
 
 (defmacro with-query [& body]
@@ -68,12 +74,17 @@
    (with-query
     (->> (make-request db query-str)
          (.startQueryExecution @client)
+         (.getQueryExecutionId))))
+  ([db query-str request-id]
+   (with-query
+    (->> (make-request db query-str request-id)
+         (.startQueryExecution @client)
          (.getQueryExecutionId)))))
 
-(defn as-state [ob]
+(defn- as-state [ob]
   (.. ob getQueryExecution getStatus getState))
 
-(defn as-stat [query-id ob]
+(defn- as-stat [query-id ob]
   (let [ex (.getQueryExecution ob)
         st (.getStatistics ex)]
     {:id         query-id
@@ -82,7 +93,7 @@
                   (.getDataScannedInBytes st))
      :time-ms    (.getEngineExecutionTimeInMillis st)}))
 
-(defn get-query-stat [query-id]
+(defn- get-query-stat [query-id]
   (->> (doto (GetQueryExecutionRequest.)
          (.withQueryExecutionId query-id))
        (.getQueryExecution @client)
@@ -95,19 +106,19 @@
        (.getQueryExecutionIds)
        (map get-query-stat)))
 
-(defn get-state [query-id]
+(defn- get-state [query-id]
   (->> (doto (GetQueryExecutionRequest.)
          (.withQueryExecutionId query-id))
        (.getQueryExecution @client)
        (as-state)))
 
-(defn succeeded? [query-id]
+(defn- succeeded? [query-id]
   (let [state (get-state query-id)]
     (when (= state "FAILED")
       (throw (Exception. (format "Query Failed: %s" query-id))))
     (=  state "SUCCEEDED")))
 
-(defn as-resultset [rs]
+(defn- as-resultset [rs]
   {:token     (.getNextToken rs)
    :resultset (.getResultSet rs)
    :cols      (->> (.. rs getResultSet
@@ -116,7 +127,7 @@
                    (map #(.getName %)))
    :rows      (.. rs getResultSet getRows)})
 
-(defn get-resultset
+(defn- get-resultset
   ([query-id]
    (->> (doto (GetQueryResultsRequest.)
           (.withQueryExecutionId query-id))
@@ -129,17 +140,17 @@
         (.getQueryResults @client)
         (as-resultset))))
 
-(defn process-row [row cols]
+(defn- process-row [row cols]
   (->> (.getData row)
        (map-indexed vector)
        (map (fn [[k datum]]
               [(keyword (nth cols k)) (.getVarCharValue datum)]))
        (into {})))
 
-(defn process-rows [rows cols]
+(defn- process-rows [rows cols]
   (map #(process-row % cols) (rest rows)))
 
-(defn get-resultseq [query-id]
+(defn- get-resultseq [query-id]
   (loop [{:keys [token rows cols]} (get-resultset query-id)
          acc  []]
     (if-not token
@@ -149,16 +160,15 @@
       (recur (get-resultset query-id token)
              (->> (process-rows rows cols)
                   (conj acc))))))
-
 ;; 10min max
 (def timeout 600000)
 
-(defn wait! [query-id]
+(defn- wait! [query-id]
   (u/wait-until #(succeeded? query-id)
                 query-id
                 timeout))
 
-(defn get-results [query-id]
+(defn- get-results [query-id]
   (try
     (wait! query-id)
     (get-resultseq query-id)
