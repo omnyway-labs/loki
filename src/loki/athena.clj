@@ -187,6 +187,9 @@
        (exec*)))
   ([db query-str]
    (-> (start-query db query-str)
+       (exec*)))
+  ([db query-str request-id]
+   (-> (start-query db query-str request-id)
        (exec*))))
 
 (defn init! [bucket {:keys [region] :as auth}]
