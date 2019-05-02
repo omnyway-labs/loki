@@ -119,7 +119,7 @@
   (let [state (get-state query-id)]
     (when (= (:status state) "FAILED")
       (throw (Exception. (format "Query Failed: %s - %s" query-id (:reason state)))))
-    (=  state "SUCCEEDED")))
+    (=  (:status state) "SUCCEEDED")))
 
 (defn- as-resultset [rs]
   {:token     (.getNextToken rs)
