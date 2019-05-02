@@ -82,13 +82,16 @@
          (.getQueryExecutionId)))))
 
 (defn- as-state [ob]
-  (.. ob getQueryExecution getStatus getState))
+  (let [ex (.. ob getQueryExecution)]
+    {:status (.. ex getStatus getState)
+     :reason (.. ex getStatus getStateChangeReason)}))
 
 (defn- as-stat [query-id ob]
   (let [ex (.getQueryExecution ob)
         st (.getStatistics ex)]
     {:id         query-id
      :status     (.. ex getStatus getState)
+     :reason     (.. ex getStatus getStateChangeReason)
      :scanned-kb (u/bytes->kb
                   (.getDataScannedInBytes st))
      :time-ms    (.getEngineExecutionTimeInMillis st)}))
@@ -114,8 +117,8 @@
 
 (defn- succeeded? [query-id]
   (let [state (get-state query-id)]
-    (when (= state "FAILED")
-      (throw (Exception. (format "Query Failed: %s" query-id))))
+    (when (= (:status state) "FAILED")
+      (throw (Exception. (format "Query Failed: %s - %s" query-id (:reason state)))))
     (=  state "SUCCEEDED")))
 
 (defn- as-resultset [rs]
