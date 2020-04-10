@@ -195,8 +195,7 @@
    (-> (start-query db query-str request-id)
        (exec*))))
 
-(defn init! [bucket {:keys [region] :as auth}]
-  (let [region (or region "us-east-1")]
-    (saw/login auth)
-    (reset! result-bucket bucket)
-    (reset! client (make-client region))))
+(defn init! [bucket provider]
+  (saw/login provider)
+  (reset! result-bucket bucket)
+  (reset! client (make-client (saw/region))))

@@ -5,13 +5,13 @@
   com.google.guava/guava {:mvn/version "22.0"},
   omnyway-labs/saw
   {:git/url "https://github.com/omnyway-labs/saw.git",
-   :sha "6f8c1f23107b3f604074e1fc1456e229ead92522",
-   :time "2019-03-05T18:28:51.000+0000",
-   :tag "0.1.17"},
+   :sha "4a592072af6fa4dc51f22148f2596f7678d93e15",
+   :time "2020-04-10T13:15:19.000+0000",
+   :tag "0.2.1"},
   omnyway-labs/sqly
   {:git/url "https://github.com/omnyway-labs/sqly.git",
-   :sha "fc38fba9f4edce29254d79e22ab29716d2112814",
-   :tag "0.1.21",
-   :time "2019-02-26T19:04:58.000+0000"},
+   :sha "f74eb0ea22ec3e0b8d3ae799efcfddb83f40b3e4",
+   :tag "0.1.23",
+   :time "2019-05-07T15:09:46.000+0000"},
   org.clojure/clojure {:mvn/version "1.9.0"},
   org.clojure/core.match {:mvn/version "0.3.0-alpha5"}}}
