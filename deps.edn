@@ -5,9 +5,9 @@
   com.google.guava/guava {:mvn/version "22.0"},
   omnyway-labs/saw
   {:git/url "https://github.com/omnyway-labs/saw.git",
-   :sha "4a592072af6fa4dc51f22148f2596f7678d93e15",
-   :time "2020-04-10T13:15:19.000+0000",
-   :tag "0.2.1"},
+   :sha "9f800666addede6847eb29ee3b771f70943e1d5a",
+   :time "2020-04-11T17:38:29.000+0000",
+   :tag "0.2.7"},
   omnyway-labs/sqly
   {:git/url "https://github.com/omnyway-labs/sqly.git",
    :sha "f74eb0ea22ec3e0b8d3ae799efcfddb83f40b3e4",
